@@ -1,27 +1,41 @@
 package main
 
 import (
-	"github.com/labstack/echo"
-	"go.uber.org/zap"
+	"basic/pkg/account"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"go.uber.org/zap"
 )
+
+var log *zap.SugaredLogger
 
 func main() {
 
-	// Initialize Router
-	router := echo.New()
+	// Initialize Echo
+	e := echo.New()
 
 	// Initialize Logger
-	logger := zap.NewExample().Sugar()
-	defer logger.Sync()
+	log = zap.NewExample().Sugar()
+	defer log.Sync()
 
-	// Construct Routes
-	router.GET("/", func(c echo.Context) error {
-		greeting := "Hello, World "
-		logger.Infof("Route '/' found, returning Greetings %s", greeting )
-		return c.String(http.StatusOK, greeting )
+	// Initialize Middleware
+	e.Use(middleware.Recover())
+	router := e.Group("/v1")
+
+	// Serve Routes
+	account.ServeResources(router, log)
+
+	// Healthcheck
+	e.GET("/", func(c echo.Context) error {
+		log.Infow("Calling Hello World...")
+		return c.JSON(http.StatusOK, "Hello, World!")
+	})
+	e.Match([]string{"GET", "HEAD"}, "/health", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Ok")
 	})
 
-	// Start Router
-	router.Logger.Fatal(router.Start(":8080"))
+	// Start server
+	e.Logger.Fatal(e.Start(":8080"))
 }
