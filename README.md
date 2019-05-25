@@ -35,6 +35,15 @@ $ docker run itau/basic
 
 ## Test it
 
+### Unit-tests
+
+```bash
+go test ./...
+```
+
+### Postman
+
+Collection in progress.
 
 `/` return Hello World
 `/health` return health check
