@@ -1,7 +1,9 @@
 package main
 
 import (
+	"basic/config"
 	"basic/pkg/account"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -13,12 +15,15 @@ var log *zap.SugaredLogger
 
 func main() {
 
-	// Initialize Echo
-	e := echo.New()
+	// Load Config
+	config := config.MustLoadConfig()
 
 	// Initialize Logger
 	log = zap.NewExample().Sugar()
 	defer log.Sync()
+
+	// Initialize Echo
+	e := echo.New()
 
 	// Initialize Middleware
 	e.Use(middleware.Recover())
@@ -37,5 +42,6 @@ func main() {
 	})
 
 	// Start server
-	e.Logger.Fatal(e.Start(":8080"))
+	address := fmt.Sprintf("%v:%v", config.Host, config.Port)
+	e.Logger.Fatal(e.Start(address))
 }
