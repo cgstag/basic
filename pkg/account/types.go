@@ -9,33 +9,33 @@ import (
 )
 
 type Account struct {
-	AccountUUID    string
-	Client         Client
-	AccountSegment Segment
-	Balance        Balance
+	UUID    string  `json:"uuid"`
+	Client  Client  `json:"page"`
+	Segment Segment `json:"accountSegment"`
+	Balance Balance `json:"balance"`
 }
 
 type Client struct {
-	ClientUUID    string
-	ClientName    string
-	ClientSurname string
+	UUID    string `json:"uuid"`
+	Name    string `json:"name"`
+	Surname string `json:"page"`
 }
 
 type Balance struct {
-	Consolidated float64
+	Consolidated float64 `json:"consolidated"`
 }
 
 type Segment struct {
-	SegmentType string
+	Type string `json:"type"`
 }
 
 func NewRandomAccount() (*Account, error) {
 	account := new(Account)
-	account.AccountUUID = uuid.New().String()
+	account.UUID = uuid.New().String()
 	account.Client = Client{
-		ClientUUID:    uuid.New().String(),
-		ClientName:    random.FirstName(2),
-		ClientSurname: random.LastName(),
+		UUID:    uuid.New().String(),
+		Name:    random.FirstName(2),
+		Surname: random.LastName(),
 	}
 	segment := rand.Intn(3)
 	segmentType := ""
@@ -47,8 +47,8 @@ func NewRandomAccount() (*Account, error) {
 	case 2:
 		segmentType = "Personalité"
 	}
-	account.AccountSegment = Segment{
-		SegmentType: segmentType,
+	account.Segment = Segment{
+		Type: segmentType,
 	}
 	integerPart := strconv.Itoa(rand.Intn(20000))
 	decimal := rand.Intn(99)
@@ -66,4 +66,12 @@ func NewRandomAccount() (*Account, error) {
 		Consolidated: consolidatedPosition,
 	}
 	return account, nil
+}
+
+func (a *Account) isBlacklisted() bool {
+	return false
+}
+
+func (a *Account) isValid() bool {
+	return true
 }

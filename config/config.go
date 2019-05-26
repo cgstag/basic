@@ -55,7 +55,7 @@ func MustLoadConfig() *ApiConfig {
 // DBConfig is a config for the relational db
 type DBConfig struct {
 	Dialect            string `mapstructure:"dialect"`
-	DSN                string `mapstructure:"dsn"`
+	Endpoint           string `mapstructure:"endpoint"`
 	MaxIdleConnections int    `mapstructure:"max_idle_connections"`
 	MaxOpenConnections int    `mapstructure:"max_open_connections"`
 }

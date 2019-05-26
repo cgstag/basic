@@ -1,6 +1,8 @@
 package account
 
 import (
+	"basic/api"
+	"basic/pkg/dynamo"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -8,19 +10,28 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type accountResource struct {
+type resource struct {
+	db  *dynamo.DB
 	log *zap.SugaredLogger
 }
 
-func ServeResources(router *echo.Group, log *zap.SugaredLogger) {
-	r := &accountResource{log}
+func ServeResources(env *api.Env, router *echo.Group) {
+	r := &resource{env.Db, env.Log}
 
 	rg := router.Group("/account")
 
+	rg.GET("/list", r.listTables)
 	rg.GET("/random", r.getRandom)
+	rg.GET("/:uuid", r.getAccount)
+	rg.GET("/:uuid/balance", r.getConsolidatedPosition)
+	rg.POST("", r.createAccount)
 }
 
-func (r *accountResource) getRandom(c echo.Context) error {
+func (r *resource) listTables(c echo.Context) error {
+	return ListTable(r.db)
+}
+
+func (r *resource) getRandom(c echo.Context) error {
 	account, err := NewRandomAccount()
 	if err != nil {
 		r.log.Error("Error generating random account")
@@ -33,10 +44,30 @@ func (r *accountResource) getRandom(c echo.Context) error {
 
 }
 
-func (r *accountResource) getAccount(c echo.Context) error {
-	return nil
+func (r *resource) getAccount(c echo.Context) error {
+	return c.JSON(http.StatusOK, "Account Detail")
 }
 
-func (r *accountResource) getConsolidatedPosition(c echo.Context) error {
-	return nil
+func (r *resource) getConsolidatedPosition(c echo.Context) error {
+	return c.JSON(http.StatusOK, "Consolidated Position")
+}
+
+func (r *resource) createAccount(c echo.Context) error {
+	// Bind Account Payload
+	acc := new(Account)
+	if err := c.Bind(acc); err != nil {
+		return c.JSON(http.StatusBadRequest, "Couldn't bind JSON payload to account Struct")
+	}
+
+	// Verify Data
+	if !acc.isValid() {
+		return c.JSON(http.StatusBadRequest, "This account is invalid")
+	}
+	if acc.isBlacklisted() {
+		return c.JSON(http.StatusForbidden, "This account is blacklisted")
+	}
+
+	// Create Account
+
+	return c.JSON(http.StatusOK, "Account created")
 }
