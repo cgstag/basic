@@ -9,6 +9,8 @@ Basic is aimed at providing a project structure and samples of every base compon
  * Logger
  * HTTP Handlers
  * Nested Structs
+ * Configuration from Yaml file and ENV
+ * Tests
  * JSON encode and decode (in progress)
  * Database calls (in progress)
  * HTTP External calls (in progress)
