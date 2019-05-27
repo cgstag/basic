@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestNewRandomAccount(t *testing.T) {
+func TestNewRandomAccount2(t *testing.T) {
 	account, err := NewRandomAccount()
 	if nil != err || account == nil {
 		t.Error("Error creating Random Account")
