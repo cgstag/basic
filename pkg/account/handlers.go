@@ -20,6 +20,7 @@ func ServeResources(env *api.Env, router *echo.Group) {
 	rg := router.Group("/account")
 
 	// META - meta.go
+	rg.GET("/getTable/:tableName", r.getTable)
 	rg.GET("/listTables", r.listTables)
 	rg.POST("/createTable", r.createTable)
 	rg.GET("/random", r.random)

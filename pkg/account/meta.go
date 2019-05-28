@@ -2,20 +2,24 @@ package account
 
 import (
 	"net/http"
-	"time"
+
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 
 	"github.com/labstack/echo/v4"
 )
 
-type MovieTable struct {
-	UserID string    `dynamo:"ID,hash" index:"Seq-ID-index,range"`
-	Time   time.Time `dynamo:",range"`
-	Seq    int64     `localIndex:"ID-Seq-index,range" index:"Seq-ID-index,hash"`
-	UUID   string    `index:"UUID-index,hash"`
+type DescribeTable struct {
+	Tablename string
 }
 
 type DeleteTable struct {
 	TableName string
+}
+
+func (r *resource) getTable(c echo.Context) error {
+	table := new(dynamodb.DescribeTableInput).SetTableName(c.Param("tableName"))
+	describe, _ := r.db.Client().DescribeTable(table)
+	return c.JSON(http.StatusOK, describe)
 }
 
 /**
@@ -33,7 +37,7 @@ func (r *resource) listTables(c echo.Context) error {
 
 // Create DynamoDB Table
 func (r *resource) createTable(c echo.Context) error {
-	err := r.db.CreateTable("Movie", MovieTable{}).Run()
+	err := r.db.CreateTable("Account", Account{}).Run()
 	if err != nil {
 		r.log.Error("Error creating DynamoDB Table")
 		c.JSON(http.StatusInternalServerError, err.Error())
