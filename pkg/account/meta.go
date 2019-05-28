@@ -1,50 +1,47 @@
 package account
 
 import (
-	"basic/pkg/dynamo"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
-// List DynamoDB Tables
+type MovieTable struct {
+	UserID string    `dynamo:"ID,hash" index:"Seq-ID-index,range"`
+	Time   time.Time `dynamo:",range"`
+	Seq    int64     `localIndex:"ID-Seq-index,range" index:"Seq-ID-index,hash"`
+	UUID   string    `index:"UUID-index,hash"`
+}
+
+type DeleteTable struct {
+	TableName string
+}
+
+/**
+ * List DynamoDB Tables
+ */
 func (r *resource) listTables(c echo.Context) error {
-	tables, err := ListTable(r.db)
+	tables, err := r.db.ListTables().All()
 	if err != nil {
 		r.log.Error("Error retrieving DynamoDB Tables")
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
 	return c.JSON(http.StatusOK, tables)
 }
 
 // Create DynamoDB Table
 func (r *resource) createTable(c echo.Context) error {
-	table := new(dynamo.Table)
-	if err := c.Bind(table); err != nil {
-		r.log.Error("Error binding DynamoDB Table struct", err)
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	err := CreateTable(r.db, table)
+	err := r.db.CreateTable("Movie", MovieTable{}).Run()
 	if err != nil {
-		r.log.Error("Error populating DynamoDB Tables", err)
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		r.log.Error("Error creating DynamoDB Table")
+		c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
-	return c.JSON(http.StatusCreated, "")
+	return c.JSON(http.StatusCreated, "Successfully Created DynamoDB Table")
 }
 
 // Populate DynamoDB Tables
 func (r *resource) populate(c echo.Context) error {
-	table := new(dynamo.Table)
-	if err := c.Bind(table); err != nil {
-		r.log.Error("Error binding DynamoDB Table struct", err.Error())
-		return c.JSON(http.StatusInternalServerError, err)
-	}
-	err := CreateTable(r.db, table)
-	if err != nil {
-		r.log.Error("Error populating DynamoDB Tables", err.Error())
-		return c.JSON(http.StatusInternalServerError, err)
-	}
-
 	return c.JSON(http.StatusCreated, "")
 }

@@ -1,8 +1,7 @@
 package api
 
 import (
-	"basic/pkg/dynamo"
-
+	"github.com/guregu/dynamo"
 	"go.uber.org/zap"
 )
 

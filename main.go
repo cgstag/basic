@@ -4,9 +4,13 @@ import (
 	"basic/api"
 	"basic/config"
 	"basic/pkg/account"
-	"basic/pkg/dynamo"
 	"fmt"
 	"net/http"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+
+	"github.com/guregu/dynamo"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -20,11 +24,15 @@ func main() {
 	// Load Config
 	configuration := config.MustLoadConfig()
 
-	// Load DB
-	db, err := dynamo.NewDB(configuration.DB)
-	if err != nil {
-		log.Panic(err)
-	}
+	// Load DynamoDB
+	var cfg aws.Config
+
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		Config:            *cfg.WithEndpoint(configuration.DB.Endpoint).WithLogLevel(aws.LogDebugWithHTTPBody),
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	db := dynamo.New(sess, cfg.WithEndpoint(configuration.DB.Endpoint).WithLogLevel(aws.LogDebugWithHTTPBody))
 
 	// Initialize Logger
 	log = zap.NewExample().Sugar()

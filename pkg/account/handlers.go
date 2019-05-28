@@ -2,10 +2,10 @@ package account
 
 import (
 	"basic/api"
-	"basic/pkg/dynamo"
 
 	"go.uber.org/zap"
 
+	"github.com/guregu/dynamo"
 	"github.com/labstack/echo/v4"
 )
 
