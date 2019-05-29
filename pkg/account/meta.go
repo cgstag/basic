@@ -47,5 +47,24 @@ func (r *resource) createTable(c echo.Context) error {
 
 // Populate DynamoDB Tables
 func (r *resource) populate(c echo.Context) error {
+	for i := 0; i < 10000; i++ {
+		err := r.random(c)
+		if err != nil {
+			r.log.Error("Error mass generating")
+			c.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
 	return c.JSON(http.StatusCreated, "")
+}
+
+func (r *resource) scan(c echo.Context) error {
+	results := make([]*Account, 1000)
+	table := r.db.Table("Account")
+	err := table.Scan().All(&results)
+	if err != nil {
+		r.log.Error("Error Scanning")
+		c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	r.log.Infof("Scanned %d elements", len(results))
+	return c.JSON(http.StatusCreated, results)
 }

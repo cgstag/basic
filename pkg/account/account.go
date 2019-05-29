@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/guregu/dynamo"
+
 	"github.com/Pallinder/go-randomdata"
 
 	"github.com/google/uuid"
@@ -14,23 +16,14 @@ import (
 )
 
 type Account struct {
-	UUID      string    `json:"uuid" dynamo:"UUID,hash" index:"Seq-ID-index,range"`
-	Client    Client    `json:"page" dynamo:"Client"`
-	Segment   Segment   `json:"accountSegment" dynamo:"Segment"`
-	Balance   Balance   `json:"balance" dynamo:"Balance"`
-	CreatedAt time.Time `json:"createdAt" dynamo:"CreatedAt,range"`
+	UUID      string    `json:"uuid" dynamo:"UUID,hash"`
+	CPF       string    `json:"cpf" index:"CPF,hash"`
+	Name      string    `json:"name" dynamo:"Name"`
+	Surname   string    `json:"page" dynamo:"Surname"`
+	Segment   string    `json:"accountSegment" dynamo:"Segment,range"`
+	Balance   float64   `json:"balance" dynamo:"Balance"`
+	CreatedAt int64     `json:"createdAt" dynamo:"CreatedAt"`
 	UpdatedAt time.Time `json:"balance" dynamo:"UpdatedAt"`
-	Seq       int64     `localIndex:"ID-Seq-index,range" index:"Seq-ID-index,hash"`
-}
-
-type Client struct {
-	UUID    string `json:"uuid"`
-	Name    string `json:"name"`
-	Surname string `json:"page"`
-}
-
-type Segment struct {
-	Type string `json:"type"`
 }
 
 // Generate a random Bank Account
@@ -42,6 +35,12 @@ func (r *resource) random(c echo.Context) error {
 	}
 	if account != nil && account.isBlacklisted() {
 		return c.JSON(http.StatusForbidden, account)
+	}
+	table := r.db.Table("Account")
+	err = table.Put(account).Run()
+	if err != nil {
+		r.log.Error("Error inserting account into DynamoDB")
+		c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, account)
 }
@@ -75,7 +74,14 @@ func (r *resource) create(c echo.Context) error {
  * @param :uuid string
  */
 func (r *resource) read(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Account Detail")
+	result := new(Account)
+	table := r.db.Table("Account")
+	err := table.Get("UUID", c.Param("uuid")).Range("Segment", dynamo.Equal, "Varejo").One(&result)
+	if err != nil {
+		r.log.Error("Error inserting account into DynamoDB")
+		c.JSON(http.StatusNoContent, err.Error())
+	}
+	return c.JSON(http.StatusOK, result)
 }
 
 /**
@@ -97,11 +103,10 @@ func (r *resource) delete(c echo.Context) error {
 func NewRandomAccount() (*Account, error) {
 	account := new(Account)
 	account.UUID = uuid.New().String()
-	account.Client = Client{
-		UUID:    uuid.New().String(),
-		Name:    randomdata.FirstName(2),
-		Surname: randomdata.LastName(),
-	}
+	account.UUID = uuid.New().String()
+	account.Name = randomdata.FirstName(2)
+	account.Surname = randomdata.LastName()
+	account.CreatedAt = time.Now().Unix()
 	segment := rand.Intn(3)
 	segmentType := ""
 	switch segment {
@@ -112,9 +117,7 @@ func NewRandomAccount() (*Account, error) {
 	case 2:
 		segmentType = "Personalité"
 	}
-	account.Segment = Segment{
-		Type: segmentType,
-	}
+	account.Segment = segmentType
 	integerPart := strconv.Itoa(rand.Intn(20000))
 	decimal := rand.Intn(99)
 	decimalString := ""
@@ -127,9 +130,7 @@ func NewRandomAccount() (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	account.Balance = Balance{
-		Consolidated: consolidatedPosition,
-	}
+	account.Balance = consolidatedPosition
 	return account, nil
 }
 

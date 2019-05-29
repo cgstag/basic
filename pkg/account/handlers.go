@@ -25,10 +25,11 @@ func ServeResources(env *api.Env, router *echo.Group) {
 	rg.POST("/createTable", r.createTable)
 	rg.GET("/random", r.random)
 	rg.POST("/populate", r.populate)
+	rg.GET("/scan", r.scan)
 
 	// CRUD ACCOUNT - account.go
 	rg.POST("", r.create)
-	rg.GET("/:uuid", r.read)
+	rg.GET("/:uuid/:created", r.read)
 	rg.PUT("/:uuid", r.update)
 	rg.DELETE("/:uuid", r.delete)
 

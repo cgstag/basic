@@ -6,10 +6,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Balance struct {
-	Consolidated float64 `json:"consolidated"`
-}
-
 /**
  * Read an account's balance
  * @param :uuid string
