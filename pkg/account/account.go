@@ -103,7 +103,6 @@ func (r *resource) delete(c echo.Context) error {
 func NewRandomAccount() (*Account, error) {
 	account := new(Account)
 	account.UUID = uuid.New().String()
-	account.UUID = uuid.New().String()
 	account.Name = randomdata.FirstName(2)
 	account.Surname = randomdata.LastName()
 	account.CreatedAt = time.Now().Unix()
